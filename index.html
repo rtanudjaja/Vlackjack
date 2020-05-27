@@ -9,7 +9,7 @@
 <body>
 
   <div id="app" class="ui container">
-    <h1>Ricky Tanudjaja - version 0.2.0 </h1>
+    <h1>Ricky Tanudjaja - version 1.0.0 </h1>
     <blackjack-game></blackjack-game>
   </div>
 
@@ -27,7 +27,7 @@
         <div class="ui message positive status" id="status" v-if="status"><H1>{{status}}</H1></div>
         <br />
         <div id="players" class="players">
-          <div class="ui two stackable cards">
+          <div class="ui two fluid cards">
             <div class="card" v-for="player in players">
               <div class="content">
                 <i class="right floated large ui user icon"></i>
@@ -37,7 +37,7 @@
                 <div class="meta">
                   Points - {{player.Points}}
                 </div>
-                <div class="ui two small images">
+                <div class="ui two tiny images">
                   <img v-for="card in player.Hand" :src="`./assets/${card.Value + card.Suit.substring(0,1)}.png`">
                 </div>
               </div>
