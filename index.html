@@ -1,0 +1,215 @@
+<html>
+
+<head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css">
+  <meta charset="utf-8" />
+  <title>Javascript Blackjack</title>
+</head>
+
+<body>
+
+  <div id="app" class="ui container">
+    <h1>Ricky Tanudjaja - version 0.2.0 </h1>
+    <blackjack-game></blackjack-game>
+  </div>
+
+  <script type="text/x-template" id="blackjack-game-template">
+    <div class="game">
+      <h3><i class="large ui gamepad icon"></i> Blackjack</h3>
+
+      <div class="game-body">
+        <div class="game-options">
+          <button class="ui primary button" v-on:click="startblackjack()">Re-Start</button>
+          <!--<button class="ui primary button" v-on:click="hitMe()">Hit Me</button>
+          <button class="ui primary button" v-on:click="stay()">Stay</button>-->
+        </div>
+        <br />
+        <div class="ui message positive status" id="status" v-if="status"><H1>{{status}}</H1></div>
+        <br />
+        <div id="players" class="players">
+          <div class="ui two stackable cards">
+            <div class="card" v-for="player in players">
+              <div class="content">
+                <i class="right floated large ui user icon"></i>
+                <div class="header">
+                  {{player.Name}}
+                </div>
+                <div class="meta">
+                  Points - {{player.Points}}
+                </div>
+                <div class="ui two small images">
+                  <img v-for="card in player.Hand" :src="`./assets/${card.Value + card.Suit.substring(0,1)}.png`">
+                </div>
+              </div>
+              <div class="extra content" v-if="!status">
+                <div class="ui two buttons" v-if="player.StillPlaying">
+                  <div class="ui basic green button" v-on:click="hitMe(player.ID)">Hit Me</div>
+                  <div class="ui basic red button" v-on:click="stay(player.ID)">Stay</div>
+                </div>
+                <div class="center aligned" v-if="!player.StillPlaying">
+                  <h3>STAY</h3>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="clear"></div>
+      </div>
+    </div>
+  </script>
+
+  <!-- Import Vue.js and axios -->
+  <script src="https://unpkg.com/vue"></script>
+  <script>
+    Vue.component('blackjack-game', {
+      template: '#blackjack-game-template',
+      data() {
+        return {
+          players: [],
+          currentPlayer: 0,
+          deck_cards: {},
+          status: ""
+        }
+      },
+      methods: {
+        createDeck: function () {
+          var suits = ["Spades", "Hearts", "Diamonds", "Clubs"];
+          var values = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+
+          deck = new Array();
+          for (var i = 0; i < values.length; i++) {
+            for (var x = 0; x < suits.length; x++) {
+              var weight = parseInt(values[i]);
+              if (values[i] == "J" || values[i] == "Q" || values[i] == "K")
+                weight = 10;
+              if (values[i] == "A")
+                weight = 11;
+              var card = {
+                Value: values[i],
+                Suit: suits[x],
+                Weight: weight
+              };
+              deck.push(card);
+            }
+          }
+          this.deck_cards = deck;
+        },
+        shuffle: function () {
+          // for 1000 turns
+          // switch the values of two random cards
+          for (var i = 0; i < 1000; i++) {
+            var location1 = Math.floor((Math.random() * this.deck_cards.length));
+            var location2 = Math.floor((Math.random() * this.deck_cards.length));
+            var tmp = this.deck_cards[location1];
+
+            this.deck_cards[location1] = this.deck_cards[location2];
+            this.deck_cards[location2] = tmp;
+          }
+        },
+        createPlayers: function (num) {
+          this.players = new Array();
+          for (var i = 1; i <= num; i++) {
+            var hand = new Array();
+            var player = {
+              Name: 'Player - ' + i,
+              ID: i,
+              Points: 0,
+              Hand: hand,
+              UserType: 'Human',
+              StillPlaying: true
+            };
+            this.players.push(player);
+          }
+        },
+        updatePoints: function () {
+          for (var i = 0; i < this.players.length; i++) {
+            var points = 0;
+            for (var j = 0; j < this.players[i].Hand.length; j++) {
+              points += this.players[i].Hand[j].Weight;
+            }
+            this.players[i].Points = points;
+          }
+        },
+        dealHands: function () {
+          // alternate handing cards to each player
+          // 2 cards each
+          for (var i = 0; i < 2; i++) {
+            for (var x = 0; x < this.players.length; x++) {
+              var card = this.deck_cards.pop();
+              this.players[x].Hand.push(card);
+              //renderCard(card, x);
+              this.updatePoints();
+            }
+          }
+        },
+        startblackjack: function () {
+          this.currentPlayer = 0;
+          this.status = '';
+          this.createDeck();
+          this.shuffle();
+          this.createPlayers(2);
+          this.dealHands();
+        },
+        hitMe: function (playerID) {
+          // pop a card from the deck to the current player
+          // check if current player new points are over 21
+          var card = this.deck_cards.pop();
+          this.players[playerID - 1].Hand.push(card);
+          //renderCard(card, currentPlayer);
+          this.updatePoints();
+          this.check(playerID);
+        },
+        stay: function (playerID) {
+          // move on to next player, if any
+          this.players[playerID - 1].StillPlaying = false;
+          var someone_is_still_playing = false;
+          this.players.forEach(function (player) {
+            if(player.StillPlaying == true) {
+              someone_is_still_playing = true;
+            }
+          });
+          if(someone_is_still_playing == false) {
+            this.end();
+          }
+        },
+        check: function (playerID) {
+          if (this.players[playerID - 1].Points > 21) {
+            this.end();
+          }
+        },
+        end: function () {
+          var winner = -1;
+          var score = 0;
+
+          for (var i = 0; i < this.players.length; i++) {
+            if (this.players[i].Points >= score && this.players[i].Points < 22) {
+              winner = i;
+              score = this.players[i].Points;
+            }
+          }
+          score = this.players[winner].Points;
+
+          this.players.forEach(function (player) {
+            player.StillPlaying = true;
+          });
+          this.status = 'Winner: Player ' + this.players[winner].ID + ' with score= ' + score;
+        }
+      },
+      created() {
+        this.startblackjack();
+      }
+    })
+
+    new Vue({
+      el: '#app',
+      data: {
+        players: [],
+        deck_cards: {}
+      }
+    })
+  </script>
+
+</body>
+
+
+</html>
