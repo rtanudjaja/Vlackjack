@@ -27,7 +27,7 @@
         <div class="ui message positive status" id="status" v-if="status"><H1>{{status}}</H1></div>
         <br />
         <div id="players" class="players">
-          <div class="ui two fluid cards">
+          <div class="ui one fluid cards">
             <div class="card" v-for="player in players">
               <div class="content">
                 <i class="right floated large ui user icon"></i>
@@ -37,7 +37,7 @@
                 <div class="meta">
                   Points - {{player.Points}}
                 </div>
-                <div class="ui two tiny images">
+                <div class="ui small images">
                   <img v-for="card in player.Hand" :src="`./assets/${card.Value + card.Suit.substring(0,1)}.png`">
                 </div>
               </div>
@@ -47,7 +47,7 @@
                   <div class="ui basic red button" v-on:click="stay(player.ID)">Stay</div>
                 </div>
                 <div class="center aligned" v-if="!player.StillPlaying">
-                  <h3>STAY</h3>
+                  <h2 class="ui disabled header">{{player.Name}} - STAY</h2>
                 </div>
               </div>
             </div>
